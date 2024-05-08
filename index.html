@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Waveform Drawing</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden
+    }
+
+    svg {
+      position: absolute;
+      top: 5%;
+      left: 5%;
+      height: 90%;
+      width: 90%;
+      border: 2pt solid rgba(0, 0, 0, 0.3);
+
+      rect {
+        transition: fill 0.5s ease;
+      }
+    }
+
+    .wrapper {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: 1fr 4fr;
+      gap: 10px;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .controls {
+      grid-column: span 3;
+    }
+
+    .panes {
+      grid-column: 1;
+      overflow-y: scroll;
+      border: 4pt solid blue;
+      border-radius: 5pt;
+    }
+
+    .output-container {
+      grid-column: span 2;
+    }
+
+    .pane-container {
+      .pane {
+        width: 100%;
+
+        div {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 2/1;
+        }
+      }
+    }
+  </style>
+</head>
+
+
+<body>
+  <div class="wrapper">
+    <div class="controls">
+      <button id="add-pane">Add a Pane</button>
+    </div>
+    <div class="panes pane-container">
+    </div>
+    <div class="output-container pane-container">
+      <div id="output-pane" class="pane"></div>
+    </div>
+  </div>
+</body>
+
+<script>var exports = {};</script>
+<script src="index.js" type="module"></script>
+
+
+</html>
