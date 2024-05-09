@@ -69,40 +69,52 @@ export class Pane {
     path.setAttribute("stroke", "black");
     svg.appendChild(path);
     if (this.output_node != null) {
-      svg.addEventListener("mousedown", (e) => {
-        this.dragging = true;
-        this.handle_mouse(e);
-      });
-      svg.addEventListener("touchstart", (e) => {
-        this.dragging = true;
-        this.handle_mouse(e.touches.item(0) as Touch);
-      });
-      svg.addEventListener("mouseup", () => {
-        this.dragging = false;
-        this.last_pos = null;
-      });
-      svg.addEventListener("touchend", (e) => {
-        this.dragging = false;
-        this.last_pos = null;
-      });
-      svg.addEventListener("mousemove", (e) => {
-        if (this.dragging) {
-          this.handle_mouse(e);
-        }
-      });
-      svg.addEventListener("touchmove", (e) => {
-        if (this.dragging) {
-          this.handle_mouse(e.touches.item(0) as Touch);
-        }
-      });
-      document.body.addEventListener("mouseup", (_) => {
-        this.dragging = false;
-        this.last_pos = null;
-      });
-      document.body.addEventListener(
-        "mousedown",
-        (_) => (this.dragging = true),
+      // svg.addEventListener("mousedown", (e) => {
+      //   this.dragging = true;
+      //   this.handle_mouse(e);
+      // });
+      svg.addEventListener(
+        "touchstart",
+        (e) => {
+          this.dragging = true;
+          this.handle_mouse(e.changedTouches.item(0) as Touch);
+        },
+        { passive: true },
       );
+      // svg.addEventListener("mouseup", () => {
+      //   this.dragging = false;
+      //   this.last_pos = null;
+      // });
+      svg.addEventListener(
+        "touchend",
+        () => {
+          this.dragging = false;
+          this.last_pos = null;
+        },
+        { passive: true },
+      );
+      // svg.addEventListener("mousemove", (e) => {
+      //   if (this.dragging) {
+      //     this.handle_mouse(e);
+      //   }
+      // });
+      svg.addEventListener(
+        "touchmove",
+        (e) => {
+          if (this.dragging) {
+            this.handle_mouse(e.changedTouches.item(0) as Touch);
+          }
+        },
+        { passive: true },
+      );
+      // document.body.addEventListener("mouseup", (_) => {
+      //   this.dragging = false;
+      //   this.last_pos = null;
+      // });
+      // document.body.addEventListener(
+      //   "mousedown",
+      //   (_) => (this.dragging = true),
+      // );
       document.body.addEventListener("touchend", (_) => {
         this.dragging = false;
         this.last_pos = null;
