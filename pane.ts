@@ -73,7 +73,15 @@ export class Pane {
         this.dragging = true;
         this.handle_mouse(e);
       });
+      svg.addEventListener("touchstart", (e) => {
+        this.dragging = true;
+        this.handle_mouse(e.touches.item(0) as Touch);
+      });
       svg.addEventListener("mouseup", () => {
+        this.dragging = false;
+        this.last_pos = null;
+      });
+      svg.addEventListener("touchend", (e) => {
         this.dragging = false;
         this.last_pos = null;
       });
@@ -82,12 +90,25 @@ export class Pane {
           this.handle_mouse(e);
         }
       });
+      svg.addEventListener("touchmove", (e) => {
+        if (this.dragging) {
+          this.handle_mouse(e.touches.item(0) as Touch);
+        }
+      });
       document.body.addEventListener("mouseup", (_) => {
         this.dragging = false;
         this.last_pos = null;
       });
       document.body.addEventListener(
         "mousedown",
+        (_) => (this.dragging = true),
+      );
+      document.body.addEventListener("touchend", (_) => {
+        this.dragging = false;
+        this.last_pos = null;
+      });
+      document.body.addEventListener(
+        "touchstart",
         (_) => (this.dragging = true),
       );
     }
@@ -190,7 +211,7 @@ export class Pane {
     ];
   }
 
-  handle_mouse(e: MouseEvent) {
+  handle_mouse(e: MouseEvent | Touch) {
     if (this.last_pos == null) {
       this.last_pos = [e.clientX, e.clientY];
     }
