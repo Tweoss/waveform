@@ -28,8 +28,38 @@ export class Pane {
         }
         const svg_container = document.createElement("div");
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("viewBox", "-100 -100 200 100");
+        svg.setAttribute("viewBox", "-100 -50 200 100");
         svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+        const add_straight_line = (a, b) => {
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", `M ${a[0]} ${a[1]} L ${b[0]} ${b[1]}`);
+            path.setAttribute("stroke", "black");
+            path.setAttribute("stroke-width", "0.2pt");
+            svg.appendChild(path);
+        };
+        const horizontal_splits = 4;
+        const horizontal_lines = new Array(horizontal_splits - 1)
+            .fill(0)
+            .map((_, i) => (100 * (i + 1)) / horizontal_splits - 50)
+            .map((y) => {
+            return [
+                [-100, y],
+                [100, y],
+            ];
+        });
+        const vertical_splits = 12;
+        const vertical_lines = new Array(vertical_splits - 1)
+            .fill(0)
+            .map((_, i) => (200 * (i + 1)) / vertical_splits - 100)
+            .map((x) => {
+            return [
+                [x, -50],
+                [x, 50],
+            ];
+        });
+        for (const pair of vertical_lines.concat(horizontal_lines)) {
+            add_straight_line(pair[0], pair[1]);
+        }
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         this.path = path;
         this.update_line();
@@ -105,7 +135,7 @@ export class Pane {
         this.waveform_node.port.postMessage(new Float32Array(data));
     }
     to_svg(x, y) {
-        return [(200 * x) / this.samples.length - 100, -y * 50 - 50];
+        return [(200 * x) / this.samples.length - 100, -y * 50];
     }
     smooth() {
         const get_with_offset = (start_i) => (offset) => this.samples[(start_i + offset + this.samples.length) % this.samples.length];
