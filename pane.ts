@@ -1,3 +1,10 @@
+const RESOLUTION: number = 400;
+
+const DURATION_OPTIONS = Object.freeze({
+  note_offset: { str: "1 / (220 * 2^(x/12))" },
+  duration: { str: "x seconds" },
+});
+
 export class Pane {
   samples: number[];
   duration: number;
@@ -13,6 +20,13 @@ export class Pane {
   waveform_node: AudioWorkletNode;
   toggled_on: boolean;
   removed: boolean;
+  duration_option: string;
+  duration_input: number;
+
+  // Each pane has a node which is connected to the main node's output.
+  // Each time the pane is updated, we post to the main node this pane's number, global update_count?,
+  // and this pane's updated data.
+  // The main node updates its outputs, maybe with a signal channel containing the global update_count
 
   constructor(
     context: BaseAudioContext,
@@ -27,9 +41,9 @@ export class Pane {
     this.output_node = output_node;
     this.context = context;
     this.removed = false;
-    this.samples = new Array(
-      Math.floor(this.duration * this.context.sampleRate),
-    ).fill(0.0);
+    this.samples = new Array(Math.floor(RESOLUTION)).fill(0.0);
+    this.duration_option = DURATION_OPTIONS.note_offset.str;
+    this.duration_input = 1;
     const frequency_ratio = Math.ceil(Math.random() * 3);
     for (let i = 0; i < this.samples.length; i++) {
       this.samples[i] = Math.sin(
@@ -49,9 +63,46 @@ export class Pane {
         container.appendChild(button);
       };
 
+      const add_number_input = (initial_value, callback) => {
+        const el = document.createElement("input");
+        el.type = "number";
+        el.min = "0";
+        el.value = initial_value;
+        el.addEventListener("input", callback);
+        container.appendChild(el);
+      };
+
+      const add_select = (options: string[], callback) => {
+        const el = document.createElement("select");
+        for (const option of options) {
+          const opt = document.createElement("option");
+          opt.value = option;
+          opt.innerText = option;
+          el.appendChild(opt);
+        }
+        el.addEventListener("input", callback);
+        el.selectedIndex = options.indexOf(this.duration_option);
+        container.appendChild(el);
+      };
+
       add_button("Smooth", this.smooth.bind(this));
       add_button("Remove", this.remove.bind(this));
       add_button("Toggle Sound", this.toggle.bind(this));
+      add_select(
+        [DURATION_OPTIONS.duration.str, DURATION_OPTIONS.note_offset.str],
+        (e) => {
+          this.duration_option = e.currentTarget.selectedOptions[0].innerText;
+          this.update_duration();
+        },
+      );
+      add_number_input(this.duration_input, (e) => {
+        const input = Number.parseFloat(e.target.value);
+        if (isNaN(input)) {
+          return;
+        }
+        this.duration_input = input;
+        this.update_duration();
+      });
     }
 
     const svg_container = document.createElement("div");
@@ -190,7 +241,10 @@ export class Pane {
   }
 
   update_samples(data: number[]) {
-    this.waveform_node.port.postMessage(new Float32Array(data));
+    this.waveform_node.port.postMessage({
+      msg: "set-buffer",
+      buffer: new Float32Array(data),
+    });
   }
 
   to_svg(x: number, y: number): [number, number] {
@@ -228,6 +282,24 @@ export class Pane {
 
   is_dead() {
     return this.removed;
+  }
+
+  update_duration() {
+    if (this.duration_option == DURATION_OPTIONS.duration.str) {
+      if (this.duration_input == 0) {
+        return;
+      }
+      this.waveform_node.port.postMessage({
+        msg: "set-duration",
+        duration: this.duration_input,
+      });
+    } else if (this.duration_option == DURATION_OPTIONS.note_offset.str) {
+      this.waveform_node.port.postMessage({
+        msg: "set-duration",
+        duration: 1 / (220 * Math.pow(2, this.duration_input / 12)),
+      });
+    }
+    this.update_samples(this.samples);
   }
 
   toggle() {
